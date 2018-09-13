@@ -67,6 +67,16 @@ def freq():
 		delay = delay_table[0]
 	else:
 		delay = delay_table[id+1]
+def stop():
+	if(stop == 0):
+		stop = 1
+	else:
+		stop = 0
+		storage = [[],[],[],[],[]]
+
+def display():
+	for item in storage:
+		#print storage item (remember it will be item [array value])
 
 # Setup GPIO interrupts
 GPIO.add_event_detect(reset_pin, GPIO.FALLING, callback=reset, bouncetime=200)
@@ -75,11 +85,15 @@ GPIO.add_event_detect(stop_pin, GPIO.FALLING, callback=stop, bouncetime=200)
 GPIO.add_event_detect(display_pin, GPIO.FALLING, callback=display, bouncetime=200)
 
 try:
-	print("Time      Timer      Pot      Temp      Light")
+	print("Time		Timer		Pot		Temp		Light")
 	while True:
-		# Read the data
-		sensr_data = GetData (channel)
-		sensor_volt = ConvertVolts(sensor_data,2)
+		if(stop == 0):
+			# Read the data
+			sensor_data = GetData (channel)
+			sensor_volt = ConvertVolts(sensor_data,2)
+			#print stuff here
+		else:
+			#store data incrementally if storage isn't full
 
 		# Wait before repeating loop
 		time.sleep(delay)
