@@ -8,9 +8,9 @@ import RPi.GPIO as GPIO
 from datetime import datetime
 
 # Define sensor channels
-channel0 = 0
-channel1 = 1
-channel2 = 2
+channel0 = 0		#light
+channel1 = 1		#temp
+channel2 = 2		#voltage
 # Define delay between readings in sec
 delay = 0.5
 delay_table = [0.5, 1, 2]
@@ -22,7 +22,7 @@ storage = [[],[],[],[],[]]
 stop = 0
 
 # Define Timer Variable in sec
-timer_ = 0
+timer = 0
 
 # Setup GPIO for buttons
 GPIO.setmode(GPIO.BCM)
@@ -67,17 +67,20 @@ def time_format(t):
 
 # Functions for buttons
 def reset(channel):
-	timer_ = 0
+	timer = 0
 	storage = [[],[],[],[],[]]
-	print("Time      Timer      Pot      Temp      Light")
+	print("Time		Timer		Pot		Temp		Light")
 
 def freq(channel):
+	global delay
 	id = delay_table.index(delay)
 	if (id+1 >= len(delay_table)):
 		delay = delay_table[0]
 	else:
 		delay = delay_table[id+1]
+	print(delay)
 def stop(channel):
+	global stop
 	if(stop == 0):
 		stop = 1
 	else:
@@ -100,18 +103,18 @@ try:
 	while True:
 		if(stop == 0):
 			# Read the data and print
-			temp = (ConvertVolts(GetData(channel1))-0.5)/0.01
-			light = (ConvertVolts(GetData(channel0))/3.3)*100
-			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(timer_), ConvertVolts(GetData(channel2)), temp, round(light,2)))
+			temp = (ConvertVolts(GetData(channel1)-0.5,2))/0.01
+			light = (ConvertVolts(GetData(channel0)/3.3,2))*100
+			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(timer), ConvertVolts(GetData(channel2),2), temp, round(light,2)))
 
 		else:
 			# Store data incrementally if storage isn't full
 			if (storage[0] != []):
 				for item in storage:
 					if(item != []):
-						temp = (ConvertVolts(GetData(1))-0.5)/0.01
-						light = (ConvertVolts(GetData(0))/3.3)*100
-						item = [datetime.now().strftime('%H:%M:%S'), time_format(timer_), ConvertVolts(GetData(2)), temp, round(light,2)]
+						temp = (ConvertVolts(GetData(channel1)-0.5,2))/0.01
+						light = (ConvertVolts(GetData(channel0)/3.3,2))*100
+						item = [datetime.now().strftime('%H:%M:%S'), time_format(timer), ConvertVolts(GetData(channel2),2), temp, round(light,2)]
 						break
 
 		# Wait before repeating loop
