@@ -5,6 +5,7 @@ import time
 import os
 import sys
 import RPi.GPIO as GPIO
+from datetime import datetime
 
 # Define sensor channels
 channel = 0
@@ -55,6 +56,14 @@ def ConvertVolts(data,places):
 	volts = round(volts,places)
 	return volts
 
+# Function for formatting the time variable
+def time_format(t):
+	seconds = t % 60
+	t -= seconds
+	minutes = t % 3600
+	t -= minutes
+	hours = t / 3600
+
 # Functions for buttons
 def reset():
 	time = 0
@@ -77,6 +86,7 @@ def stop():
 def display():
 	for item in storage:
 		#print storage item (remember it will be item [array value])
+		print('{}	{}	{}V	{}	{}%'.format(item[0], item[1], item[2], item[3], item[4]))
 
 # Setup GPIO interrupts
 GPIO.add_event_detect(reset_pin, GPIO.FALLING, callback=reset, bouncetime=200)
