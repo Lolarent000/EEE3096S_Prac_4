@@ -22,7 +22,7 @@ storage = [[],[],[],[],[]]
 stop = 0
 
 # Define Timer Variable in sec
-time = 0
+timer_ = 0
 
 # Setup GPIO for buttons
 GPIO.setmode(GPIO.BCM)
@@ -66,25 +66,25 @@ def time_format(t):
 	hours = t / 3600
 
 # Functions for buttons
-def reset():
-	time = 0
+def reset(channel):
+	timer_ = 0
 	storage = [[],[],[],[],[]]
 	print("Time      Timer      Pot      Temp      Light")
 
-def freq():
+def freq(channel):
 	id = delay_table.index(delay)
 	if (id+1 >= len(delay_table)):
 		delay = delay_table[0]
 	else:
 		delay = delay_table[id+1]
-def stop():
+def stop(channel):
 	if(stop == 0):
 		stop = 1
 	else:
 		stop = 0
 		storage = [[],[],[],[],[]]
 
-def display():
+def display(channel):
 	for item in storage:
 		# Print storage item (remember it will be item [array value])
 		print('{}	{}	{}V	{}	{}%'.format(item[0], item[1], item[2], item[3], item[4]))
@@ -102,7 +102,7 @@ try:
 			# Read the data and print
 			temp = (ConvertVolts(GetData(channel1))-0.5)/0.01
 			light = (ConvertVolts(GetData(channel0))/3.3)*100
-			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(time), ConvertVolts(GetData(channel2)), temp, round(light,2)))
+			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(timer_), ConvertVolts(GetData(channel2)), temp, round(light,2)))
 
 		else:
 			# Store data incrementally if storage isn't full
@@ -111,7 +111,7 @@ try:
 					if(item != []):
 						temp = (ConvertVolts(GetData(1))-0.5)/0.01
 						light = (ConvertVolts(GetData(0))/3.3)*100
-						item = [datetime.now().strftime('%H:%M:%S'), time_format(time), ConvertVolts(GetData(2)), temp, round(light,2)]
+						item = [datetime.now().strftime('%H:%M:%S'), time_format(timer_), ConvertVolts(GetData(2)), temp, round(light,2)]
 						break
 
 		# Wait before repeating loop
