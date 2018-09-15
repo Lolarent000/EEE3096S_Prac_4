@@ -34,24 +34,24 @@ stop_pin=22
 display_pin=23
 
 # Setup pins
-GPIO.setup(reset_pin, GPIO.IN, pull_up_pull_down=GPIO.PUD_UP)
-GPIO.setup(freq_pin, GPIO.IN, pull_up_pull_down=GPIO.PUD_UP)
-GPIO.setup(stop_pin, GPIO.IN, pull_up_pull_down=GPIO.PUD_UP)
-GPIO.setup(display_pin, GPIO.IN, pull_up_pull_down=GPIO.PUD_UP)
+GPIO.setup(reset_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(freq_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(stop_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(display_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Open SPI bus
-spi = spidev.SpiDev() # create spi object
+spi = spidev.SpiDev() # Create spi object
 spi.open(0,0)
 
 # RPI has one bus (#0) and two devices (#0 & #1)
-# function to read ADC data from a channel
-def GetData(channel): # channel must be an integer 0-7
-	adc = spi.xfer2([1,(8+channel)<<4,0]) # sending 3 bytes
+# Function to read ADC data from a channel
+def GetData(channel): # Channel must be an integer 0-7
+	adc = spi.xfer2([1,(8+channel)<<4,0]) # Sending 3 bytes
 	data = ((adc[1]&3) << 8) + adc[2]
 	return data
 
-# function to convert data to voltage level,
-# places: number of decimal places needed
+# Function to convert data to voltage level,
+# Places: number of decimal places needed
 def ConvertVolts(data,places):
 	volts = (data * 3.3) / float(1023)
 	volts = round(volts,places)
@@ -73,7 +73,7 @@ def reset():
 
 def freq():
 	id = delay_table.index(delay)
-	if (id+1 >= len(delay_table):
+	if (id+1 >= len(delay_table)):
 		delay = delay_table[0]
 	else:
 		delay = delay_table[id+1]
@@ -86,7 +86,7 @@ def stop():
 
 def display():
 	for item in storage:
-		#print storage item (remember it will be item [array value])
+		# Print storage item (remember it will be item [array value])
 		print('{}	{}	{}V	{}	{}%'.format(item[0], item[1], item[2], item[3], item[4]))
 
 # Setup GPIO interrupts
@@ -105,7 +105,7 @@ try:
 			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(time), ConvertVolts(GetData(channel2)), temp, round(light,2)))
 
 		else:
-			#store data incrementally if storage isn't full
+			# Store data incrementally if storage isn't full
 			if (storage[0] != []):
 				for item in storage:
 					if(item != []):
