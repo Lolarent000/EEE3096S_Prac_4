@@ -8,8 +8,9 @@ import RPi.GPIO as GPIO
 from datetime import datetime
 
 # Define sensor channels
-channel = 0
-
+channel0 = 0
+channel1 = 1
+channel2 = 2
 # Define delay between readings in sec
 delay = 0.5
 delay_table = [0.5, 1, 2]
@@ -98,12 +99,20 @@ try:
 	print("Time		Timer		Pot		Temp		Light")
 	while True:
 		if(stop == 0):
-			# Read the data
-			sensor_data = GetData (channel)
-			sensor_volt = ConvertVolts(sensor_data,2)
-			#print stuff here
+			# Read the data and print
+			temp = (ConvertVolts(GetData(channel1))-0.5)/0.01
+			light = (ConvertVolts(GetData(channel0))/3.3)*100
+			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(time), ConvertVolts(GetData(channel2)), temp, round(light,2)))
+
 		else:
 			#store data incrementally if storage isn't full
+			if (storage[0] != []):
+				for item in storage:
+					if(item != []):
+						temp = (ConvertVolts(GetData(1))-0.5)/0.01
+						light = (ConvertVolts(GetData(0))/3.3)*100
+						item = [datetime.now().strftime('%H:%M:%S'), time_format(time), ConvertVolts(GetData(2)), temp, round(light,2)]
+						break
 
 		# Wait before repeating loop
 		time.sleep(delay)
