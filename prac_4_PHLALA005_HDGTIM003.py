@@ -11,6 +11,7 @@ from datetime import datetime
 channel0 = 0		#light
 channel1 = 1		#temp
 channel2 = 2		#voltage
+
 # Define delay between readings in sec
 delay = 0.5
 delay_table = [0.5, 1, 2]
@@ -42,7 +43,8 @@ GPIO.setup(display_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 # Open SPI bus
 spi = spidev.SpiDev() # Create spi object
 spi.open(0,0)
-
+spi.max_speed_hz =  1000000
+ 
 # RPI has one bus (#0) and two devices (#0 & #1)
 # Function to read ADC data from a channel
 def GetData(channel): # Channel must be an integer 0-7
@@ -64,11 +66,13 @@ def time_format(t):
 	minutes = t % 3600
 	t -= minutes
 	hours = t / 3600
+	return [str(int(hours)).zfill(2), str(int(minutes)).zfill(2), str(int(seconds)).zfill(2)]
 
 # Functions for buttons
 def reset(channel):
+	global timer
 	timer = 0
-	storage = [[],[],[],[],[]]
+	print(chr(27)+"[2J")
 	print("Time		Timer		Pot		Temp		Light")
 
 def freq(channel):
@@ -78,46 +82,53 @@ def freq(channel):
 		delay = delay_table[0]
 	else:
 		delay = delay_table[id+1]
-	print(delay)
+
 def stop(channel):
+	global storage
 	global stop
 	if(stop == 0):
+		storage = [[],[],[],[],[]]
 		stop = 1
 	else:
 		stop = 0
-		storage = [[],[],[],[],[]]
 
 def display(channel):
+	global storage
 	for item in storage:
 		# Print storage item (remember it will be item [array value])
-		print('{}	{}	{}V	{}	{}%'.format(item[0], item[1], item[2], item[3], item[4]))
+		if (item != []):
+			print('{}	{}:{}:{}	{}V		{}C		{}%'.format(item[0], item[1], item[2], item[3], item[4], item[5], item[6]))
 
 # Setup GPIO interrupts
-GPIO.add_event_detect(reset_pin, GPIO.FALLING, callback=reset, bouncetime=200)
-GPIO.add_event_detect(freq_pin, GPIO.FALLING, callback=freq, bouncetime=200)
-GPIO.add_event_detect(stop_pin, GPIO.FALLING, callback=stop, bouncetime=200)
-GPIO.add_event_detect(display_pin, GPIO.FALLING, callback=display, bouncetime=200)
+GPIO.add_event_detect(reset_pin, GPIO.FALLING, callback=reset, bouncetime=500)
+GPIO.add_event_detect(freq_pin, GPIO.FALLING, callback=freq, bouncetime=500)
+GPIO.add_event_detect(stop_pin, GPIO.FALLING, callback=stop, bouncetime=500)
+GPIO.add_event_detect(display_pin, GPIO.FALLING, callback=display, bouncetime=500)
 
 try:
 	print("Time		Timer		Pot		Temp		Light")
+	stop = 0
 	while True:
 		if(stop == 0):
 			# Read the data and print
-			temp = (ConvertVolts(GetData(channel1)-0.5,2))/0.01
-			light = (ConvertVolts(GetData(channel0)/3.3,2))*100
-			print('{}	{}	{}V	{}	{}%'.format(datetime.now().strftime('%H:%M:%S'), time_format(timer), ConvertVolts(GetData(channel2),2), temp, round(light,2)))
+			temp = int(round((ConvertVolts(GetData(channel1),2)-0.5)/0.01))
+			light = (ConvertVolts(GetData(channel0)/3.06,2))*100
+			t = time_format(timer)
+			print('{}	{}:{}:{}	{}V		{}C		{}%'.format((datetime.now()).strftime('%H:%M:%S'), t[0], t[1], t[2] , ConvertVolts(GetData(channel2),2), temp, round(light,2)))
 
 		else:
 			# Store data incrementally if storage isn't full
-			if (storage[0] != []):
-				for item in storage:
-					if(item != []):
-						temp = (ConvertVolts(GetData(channel1)-0.5,2))/0.01
-						light = (ConvertVolts(GetData(channel0)/3.3,2))*100
-						item = [datetime.now().strftime('%H:%M:%S'), time_format(timer), ConvertVolts(GetData(channel2),2), temp, round(light,2)]
+			if (storage[4] == []):
+				for i in range(0,len(storage)):
+					if(storage[i] == []):
+						temp = int(round((ConvertVolts(GetData(channel1),2)-0.5)/0.01))
+						light = (ConvertVolts(GetData(channel0)/3.06,2))*100
+						t = time_format(timer)
+						storage[i] = [datetime.now().strftime('%H:%M:%S'), t[0], t[1], t[2], ConvertVolts(GetData(channel2),2), temp, round(light,2)]
 						break
 
 		# Wait before repeating loop
+		timer += delay
 		time.sleep(delay)
 
 except Exception as e:
